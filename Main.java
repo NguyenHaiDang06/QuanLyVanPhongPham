@@ -9,14 +9,17 @@ package QuanLyVanPhongPham;
  * @author Admin
  */
 
-
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("Chuong trinh quan ly van phong pham");
 
-        LoginForm login = new LoginForm();
-        login.setVisible(true);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+
+                new LoginForm().setVisible(true);
+
+            }
+        });
+
     }
-
 }

@@ -4,55 +4,87 @@
  */
 package QuanLyVanPhongPham;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-
-/**
- *
- * @author Admin
- */
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class NhanVien {
 
-    public static ArrayList<NhanVien> ds = new ArrayList<>();
+    String maNV;
+    String matKhau;
 
-    String username;
-    String password;
-
-    public NhanVien(String username, String password) {
-
-        this.username = username;
-        this.password = password;
-
+    public NhanVien(String maNV, String matKhau) {
+        this.maNV = maNV;
+        this.matKhau = matKhau;
     }
 
-    public static boolean dangNhap(String user, String pass){
+    // Hàm đăng nhập
+    public static boolean dangNhap(String maNV, String pass) {
 
-        for(NhanVien nv : ds){
+        boolean ketQua = false;
 
-            if(nv.username.equals(user) && nv.password.equals(pass)){
-                return true;
+        try {
+
+            Connection conn = DBConnection.getConnection();
+
+            if (conn == null) {
+                System.out.println("Không kết nối được database");
+                return false;
             }
 
-        }
+            String sql = "SELECT * FROM NhanVien WHERE LTRIM(RTRIM(MaNV))=? AND LTRIM(RTRIM(MatKhau))=?";
 
-        return false;
+            PreparedStatement ps = conn.prepareStatement(sql);
 
-    }
+            ps.setString(1, maNV.trim());
+            ps.setString(2, pass.trim());
 
-    public static boolean tonTai(String user){
+            ResultSet rs = ps.executeQuery();
 
-        for(NhanVien nv : ds){
-
-            if(nv.username.equals(user)){
-                return true;
+            if (rs.next()) {
+                ketQua = true;
             }
 
+            rs.close();
+            ps.close();
+            conn.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        return false;
-
+        return ketQua;
     }
 
+    // Kiểm tra nhân viên tồn tại chưa
+    public static boolean tonTai(String maNV) {
+
+        boolean tonTai = false;
+
+        try {
+
+            Connection conn = DBConnection.getConnection();
+
+            String sql = "SELECT * FROM NhanVien WHERE LTRIM(RTRIM(MaNV))=?";
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, maNV.trim());
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                tonTai = true;
+            }
+
+            rs.close();
+            ps.close();
+            conn.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return tonTai;
+    }
 }

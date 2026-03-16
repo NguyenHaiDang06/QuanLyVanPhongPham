@@ -4,25 +4,23 @@
  */
 package QuanLyVanPhongPham;
 
-/**
- *
- * @author Admin
- */
 import javax.swing.*;
 import java.awt.event.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
-public class RegisterForm extends JFrame{
+public class RegisterForm extends JFrame {
 
     JTextField txtUser;
     JPasswordField txtPass;
 
-    public RegisterForm(){
+    public RegisterForm() {
 
         setTitle("Đăng ký nhân viên");
         setSize(300,200);
         setLocationRelativeTo(null);
 
-        JLabel lbUser = new JLabel("Tài khoản");
+        JLabel lbUser = new JLabel("Mã nhân viên");
         JLabel lbPass = new JLabel("Mật khẩu");
 
         txtUser = new JTextField(15);
@@ -43,21 +41,46 @@ public class RegisterForm extends JFrame{
         add(p);
 
         btnSave.addActionListener((ActionEvent e) -> {
+
             String user = txtUser.getText();
             String pass = new String(txtPass.getPassword());
-            
-            if(NhanVien.tonTai(user)){
-                JOptionPane.showMessageDialog(null,"Tài khoản đã tồn tại");
-            }else{
-                
-                NhanVien.ds.add(new NhanVien(user,pass));
-                
-                JOptionPane.showMessageDialog(null,"Đăng ký thành công");
-                
-                dispose();
+
+            if (NhanVien.tonTai(user)) {
+
+                JOptionPane.showMessageDialog(null,"Mã nhân viên đã tồn tại");
+
+            } else {
+
+                try {
+
+                    Connection conn = DBConnection.getConnection();
+
+                    String sql = "INSERT INTO NhanVien(MaNV,HoTen,NgaySinh,MatKhau,ChucVu,SDT) VALUES(?,?,?,?,?,?)";
+
+                    PreparedStatement ps = conn.prepareStatement(sql);
+
+                    ps.setString(1, user);
+                    ps.setString(2, "Nhân viên mới");
+                    ps.setDate(3, java.sql.Date.valueOf("2000-01-01"));
+                    ps.setString(4, pass);
+                    ps.setString(5, "Nhân viên");
+                    ps.setString(6, "0000000000");
+
+                    ps.executeUpdate();
+
+                    JOptionPane.showMessageDialog(null,"Đăng ký thành công");
+
+                    dispose();
+
+                } catch(Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null,"Lỗi đăng ký");
+                }
+
             }
+
         });
 
+        setVisible(true);
     }
-
 }
