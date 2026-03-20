@@ -55,28 +55,66 @@ public class KhoHangForm extends JFrame {
 
         loadSanPham();
 
-        // Nhập hàng
+        // ================= NHẬP HÀNG =================
         btnNhap.addActionListener(e -> {
-
-            if(txtMa.getText().isEmpty() || txtTen.getText().isEmpty()){
-                JOptionPane.showMessageDialog(null,"Nhập đầy đủ thông tin!");
-                return;
-            }
 
             try{
 
+                if(txtMa.getText().isEmpty() || txtTen.getText().isEmpty()){
+                    JOptionPane.showMessageDialog(null,"Vui lòng nhập đủ dữ liệu");
+                    return;
+                }
+
                 Connection conn = DBConnection.getConnection();
 
-                String sql = "INSERT INTO SanPham (MaSP,TenSP,DonGia,SoLuongTon,MaLoai,MaNCC) VALUES (?,?,?,?,?,?)";
+                // ===== KIỂM TRA LOẠI =====
+                String checkLoai = "SELECT * FROM LoaiSanPham WHERE MaLoai=?";
+                PreparedStatement psCheckLoai = conn.prepareStatement(checkLoai);
+                psCheckLoai.setString(1, txtLoai.getText());
+
+                ResultSet rsLoai = psCheckLoai.executeQuery();
+
+                if(!rsLoai.next()){
+                    String insertLoai = "INSERT INTO LoaiSanPham VALUES (?,?)";
+                    PreparedStatement psInsertLoai = conn.prepareStatement(insertLoai);
+
+                    psInsertLoai.setString(1, txtLoai.getText());
+                    psInsertLoai.setString(2, "Loại mới");
+
+                    psInsertLoai.executeUpdate();
+                }
+
+                // ===== KIỂM TRA NHÀ CUNG CẤP =====
+                String checkNCC = "SELECT * FROM NhaCungCap WHERE MaNCC=?";
+                PreparedStatement psCheckNCC = conn.prepareStatement(checkNCC);
+                psCheckNCC.setString(1, txtNCC.getText());
+
+                ResultSet rsNCC = psCheckNCC.executeQuery();
+
+                if(!rsNCC.next()){
+                    String insertNCC = "INSERT INTO NhaCungCap VALUES (?,?,?,?)";
+                    PreparedStatement psInsertNCC = conn.prepareStatement(insertNCC);
+
+                    psInsertNCC.setString(1, txtNCC.getText());
+                    psInsertNCC.setString(2, "NCC mới");
+                    psInsertNCC.setString(3, "");
+                    psInsertNCC.setString(4, "");
+
+                    psInsertNCC.executeUpdate();
+                }
+
+                // ===== THÊM SẢN PHẨM =====
+                String sql = "INSERT INTO SanPham (MaSP,TenSP,DonViTinh,DonGia,SoLuongTon,MaLoai,MaNCC) VALUES (?,?,?,?,?,?,?)";
 
                 PreparedStatement ps = conn.prepareStatement(sql);
 
                 ps.setString(1, txtMa.getText());
                 ps.setString(2, txtTen.getText());
-                ps.setDouble(3, Double.parseDouble(txtGia.getText()));
-                ps.setInt(4, Integer.parseInt(txtSL.getText()));
-                ps.setString(5, txtLoai.getText());
-                ps.setString(6, txtNCC.getText());
+                ps.setString(3, "Cái");
+                ps.setDouble(4, Double.parseDouble(txtGia.getText()));
+                ps.setInt(5, Integer.parseInt(txtSL.getText()));
+                ps.setString(6, txtLoai.getText());
+                ps.setString(7, txtNCC.getText());
 
                 ps.executeUpdate();
 
@@ -85,13 +123,22 @@ public class KhoHangForm extends JFrame {
                 model.setRowCount(0);
                 loadSanPham();
 
+                txtMa.setText("");
+                txtTen.setText("");
+                txtGia.setText("");
+                txtSL.setText("");
+                txtLoai.setText("");
+                txtNCC.setText("");
+
             }catch(Exception ex){
-                JOptionPane.showMessageDialog(null, ex.getMessage());
+
+                JOptionPane.showMessageDialog(null,"Lỗi nhập hàng:\n" + ex.getMessage());
+
             }
 
         });
 
-        // Click bảng
+        // ================= CLICK TABLE =================
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt){
 
@@ -106,7 +153,7 @@ public class KhoHangForm extends JFrame {
             }
         });
 
-        // Sửa
+        // ================= SỬA =================
         btnSua.addActionListener(e -> {
 
             int row = table.getSelectedRow();
@@ -139,12 +186,12 @@ public class KhoHangForm extends JFrame {
                 loadSanPham();
 
             }catch(Exception ex){
-                JOptionPane.showMessageDialog(null, ex.getMessage());
+                JOptionPane.showMessageDialog(null,"Lỗi sửa:\n"+ex.getMessage());
             }
 
         });
 
-        // Xóa
+        // ================= XÓA =================
         btnXoa.addActionListener(e -> {
 
             int row = table.getSelectedRow();
@@ -172,7 +219,7 @@ public class KhoHangForm extends JFrame {
                 loadSanPham();
 
             }catch(Exception ex){
-                JOptionPane.showMessageDialog(null, ex.getMessage());
+                JOptionPane.showMessageDialog(null,"Lỗi xóa:\n"+ex.getMessage());
             }
 
         });
@@ -187,14 +234,14 @@ public class KhoHangForm extends JFrame {
         add(bottom, BorderLayout.SOUTH);
     }
 
-    // load dữ liệu
+    // ================= LOAD DATA =================
     void loadSanPham(){
 
         try{
 
             Connection conn = DBConnection.getConnection();
 
-            String sql = "SELECT * FROM SanPham";
+            String sql = "SELECT MaSP,TenSP,DonGia,SoLuongTon,MaLoai,MaNCC FROM SanPham";
 
             PreparedStatement ps = conn.prepareStatement(sql);
 
@@ -214,7 +261,7 @@ public class KhoHangForm extends JFrame {
             }
 
         }catch(Exception e){
-            JOptionPane.showMessageDialog(null, e.getMessage());
+            JOptionPane.showMessageDialog(null,"Lỗi load dữ liệu");
         }
     }
 }
