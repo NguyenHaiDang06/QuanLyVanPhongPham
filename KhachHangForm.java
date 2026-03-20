@@ -1,12 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package QuanLyVanPhongPham;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class KhachHangForm extends JFrame {
 
@@ -49,25 +48,38 @@ public class KhachHangForm extends JFrame {
         JButton btnSua = new JButton("Sửa");
         JButton btnXoa = new JButton("Xóa");
 
-        // thêm khách hàng
+        loadKhachHang();
+
+        // ================= THÊM KHÁCH HÀNG =================
         btnThem.addActionListener(e -> {
 
-            model.addRow(new Object[]{
-                txtMa.getText(),
-                txtTen.getText(),
-                txtSDT.getText(),
-                txtDiaChi.getText()
-            });
+            try{
 
-            JOptionPane.showMessageDialog(null,"Thêm khách hàng thành công");
+                Connection conn = DBConnection.getConnection();
 
-            txtMa.setText("");
-            txtTen.setText("");
-            txtSDT.setText("");
-            txtDiaChi.setText("");
+                String sql = "INSERT INTO KhachHang VALUES (?,?,?,?)";
+
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                ps.setString(1, txtMa.getText());
+                ps.setString(2, txtTen.getText());
+                ps.setString(3, txtSDT.getText());
+                ps.setString(4, txtDiaChi.getText());
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null,"Thêm khách hàng thành công");
+
+                model.setRowCount(0);
+                loadKhachHang();
+
+            }catch(Exception ex){
+                JOptionPane.showMessageDialog(null,"Lỗi: "+ex.getMessage());
+            }
+
         });
 
-        // click bảng hiện dữ liệu
+        // ================= CLICK TABLE =================
         table.addMouseListener(new java.awt.event.MouseAdapter(){
             public void mouseClicked(java.awt.event.MouseEvent evt){
 
@@ -81,7 +93,7 @@ public class KhachHangForm extends JFrame {
             }
         });
 
-        // sửa khách hàng
+        // ================= SỬA KHÁCH HÀNG =================
         btnSua.addActionListener(e -> {
 
             int row = table.getSelectedRow();
@@ -91,15 +103,33 @@ public class KhachHangForm extends JFrame {
                 return;
             }
 
-            model.setValueAt(txtMa.getText(),row,0);
-            model.setValueAt(txtTen.getText(),row,1);
-            model.setValueAt(txtSDT.getText(),row,2);
-            model.setValueAt(txtDiaChi.getText(),row,3);
+            try{
 
-            JOptionPane.showMessageDialog(null,"Sửa thành công");
+                Connection conn = DBConnection.getConnection();
+
+                String sql = "UPDATE KhachHang SET HoTen=?, SDT=?, DiaChi=? WHERE MaKH=?";
+
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                ps.setString(1, txtTen.getText());
+                ps.setString(2, txtSDT.getText());
+                ps.setString(3, txtDiaChi.getText());
+                ps.setString(4, txtMa.getText());
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null,"Sửa thành công");
+
+                model.setRowCount(0);
+                loadKhachHang();
+
+            }catch(Exception ex){
+                JOptionPane.showMessageDialog(null,"Lỗi: "+ex.getMessage());
+            }
+
         });
 
-        // xóa khách hàng
+        
         btnXoa.addActionListener(e -> {
 
             int row = table.getSelectedRow();
@@ -109,10 +139,27 @@ public class KhachHangForm extends JFrame {
                 return;
             }
 
-            txtMa.setText("");
-            txtTen.setText("");
-            txtSDT.setText("");
-            txtDiaChi.setText("");
+            try{
+
+                Connection conn = DBConnection.getConnection();
+
+                String sql = "DELETE FROM KhachHang WHERE MaKH=?";
+
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                ps.setString(1, txtMa.getText());
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null,"Xóa thành công");
+
+                model.setRowCount(0);
+                loadKhachHang();
+
+            }catch(Exception ex){
+                JOptionPane.showMessageDialog(null,"Lỗi: "+ex.getMessage());
+            }
+
         });
 
         JPanel bottom = new JPanel();
@@ -123,5 +170,34 @@ public class KhachHangForm extends JFrame {
         add(panelNhap, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
         add(bottom, BorderLayout.SOUTH);
+    }
+
+    // ================= LOAD DATA =================
+    void loadKhachHang(){
+
+        try{
+
+            Connection conn = DBConnection.getConnection();
+
+            String sql = "SELECT * FROM KhachHang";
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()){
+
+                model.addRow(new Object[]{
+                        rs.getString("MaKH"),
+                        rs.getString("HoTen"),
+                        rs.getString("SDT"),
+                        rs.getString("DiaChi")
+                });
+
+            }
+
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null,"Lỗi load dữ liệu");
+        }
     }
 }
